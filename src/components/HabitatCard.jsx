@@ -1,4 +1,6 @@
-export default function HabitatCard({ habitat, isBuilt, onToggle, onClick }) {
+import { memo } from "react";
+
+function HabitatCard({ habitat, isBuilt, onToggle, onClick }) {
   return (
     <div
       className={`habitat-card ${isBuilt ? "built" : ""}`}
@@ -26,3 +28,5 @@ export default function HabitatCard({ habitat, isBuilt, onToggle, onClick }) {
     </div>
   );
 }
+
+export default memo(HabitatCard);

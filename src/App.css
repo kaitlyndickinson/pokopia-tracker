@@ -173,6 +173,8 @@ h1 .accent { color: var(--accent); }
   gap: 6px;
   padding: 12px;
   transition: border-color 0.15s, transform 0.1s;
+  content-visibility: auto;
+  contain-intrinsic-size: 0 140px;
 }
 
 .habitat-card:hover {

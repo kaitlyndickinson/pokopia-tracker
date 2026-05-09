@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { habitats, categories } from "./data/habitats";
 import HabitatCard from "./components/HabitatCard";
 import HabitatDetail from "./components/HabitatDetail";
@@ -23,24 +23,27 @@ export default function App() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify([...built]));
   }, [built]);
 
-  const toggle = (id) => {
+  const toggle = useCallback((id) => {
     setBuilt(prev => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
-  };
+  }, []);
 
-  const filtered = habitats.filter(h => {
+  const handleSelect = useCallback((h) => setSelected(h), []);
+  const handleClose = useCallback(() => setSelected(null), []);
+
+  const filtered = useMemo(() => habitats.filter(h => {
     if (filter === "built" && !built.has(h.id)) return false;
     if (filter === "needed" && built.has(h.id)) return false;
     if (categoryFilter !== "all" && h.category !== categoryFilter) return false;
     if (search && !h.name.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
-  });
+  }), [built, filter, categoryFilter, search]);
 
-  const needed = filtered.filter(h => !built.has(h.id));
-  const done = filtered.filter(h => built.has(h.id));
+  const needed = useMemo(() => filtered.filter(h => !built.has(h.id)), [filtered, built]);
+  const done = useMemo(() => filtered.filter(h => built.has(h.id)), [filtered, built]);
 
   return (
     <div className="app">
@@ -106,7 +109,7 @@ export default function App() {
                   habitat={h}
                   isBuilt={false}
                   onToggle={toggle}
-                  onClick={setSelected}
+                  onClick={handleSelect}
                 />
               ))}
             </div>
@@ -125,7 +128,7 @@ export default function App() {
                   habitat={h}
                   isBuilt={true}
                   onToggle={toggle}
-                  onClick={setSelected}
+                  onClick={handleSelect}
                 />
               ))}
             </div>
@@ -141,7 +144,7 @@ export default function App() {
         habitat={selected}
         isBuilt={selected ? built.has(selected.id) : false}
         onToggle={toggle}
-        onClose={() => setSelected(null)}
+        onClose={handleClose}
       />
     </div>
   );
