@@ -1,122 +1,148 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useState, useEffect } from "react";
+import { habitats, categories } from "./data/habitats";
+import HabitatCard from "./components/HabitatCard";
+import HabitatDetail from "./components/HabitatDetail";
+import "./App.css";
 
-function App() {
-  const [count, setCount] = useState(0)
+const STORAGE_KEY = "pokopia-built";
+
+export default function App() {
+  const [built, setBuilt] = useState(() => {
+    try {
+      return new Set(JSON.parse(localStorage.getItem(STORAGE_KEY)) || []);
+    } catch {
+      return new Set();
+    }
+  });
+  const [selected, setSelected] = useState(null);
+  const [filter, setFilter] = useState("all"); // "all" | "needed" | "built"
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([...built]));
+  }, [built]);
+
+  const toggle = (id) => {
+    setBuilt(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const filtered = habitats.filter(h => {
+    if (filter === "built" && !built.has(h.id)) return false;
+    if (filter === "needed" && built.has(h.id)) return false;
+    if (categoryFilter !== "all" && h.category !== categoryFilter) return false;
+    if (search && !h.name.toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  });
+
+  const needed = filtered.filter(h => !built.has(h.id));
+  const done = filtered.filter(h => built.has(h.id));
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <div className="app">
+      <header className="app-header">
+        <div className="header-title">
+          <span className="pokeball">◉</span>
+          <h1>Pokopia<span className="accent">Tracker</span></h1>
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
+        <div className="progress-bar-wrap">
+          <div
+            className="progress-bar-fill"
+            style={{ width: `${(built.size / habitats.length) * 100}%` }}
+          />
+          <span className="progress-label">{built.size} / {habitats.length} built</span>
         </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+      </header>
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+      <div className="controls">
+        <input
+          className="search-input"
+          placeholder="Search habitats..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+        <div className="filter-row">
+          {["all", "needed", "built"].map(f => (
+            <button
+              key={f}
+              className={`filter-btn ${filter === f ? "active" : ""}`}
+              onClick={() => setFilter(f)}
+            >
+              {f === "all" ? "All" : f === "needed" ? "Still Needed" : "Built"}
+            </button>
+          ))}
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
+        <div className="filter-row category-row">
+          <button
+            className={`filter-btn small ${categoryFilter === "all" ? "active" : ""}`}
+            onClick={() => setCategoryFilter("all")}
+          >All Types</button>
+          {categories.map(c => (
+            <button
+              key={c}
+              className={`filter-btn small ${categoryFilter === c ? "active" : ""}`}
+              onClick={() => setCategoryFilter(c)}
+            >
+              {c}
+            </button>
+          ))}
         </div>
-      </section>
+      </div>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      <main className="habitat-sections">
+        {(filter === "all" || filter === "needed") && needed.length > 0 && (
+          <section>
+            <h2 className="section-heading needed-heading">
+              Still Needed <span className="count">{needed.length}</span>
+            </h2>
+            <div className="habitat-grid">
+              {needed.map(h => (
+                <HabitatCard
+                  key={h.id}
+                  habitat={h}
+                  isBuilt={false}
+                  onToggle={toggle}
+                  onClick={setSelected}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {(filter === "all" || filter === "built") && done.length > 0 && (
+          <section>
+            <h2 className="section-heading built-heading">
+              Built <span className="count">{done.length}</span>
+            </h2>
+            <div className="habitat-grid">
+              {done.map(h => (
+                <HabitatCard
+                  key={h.id}
+                  habitat={h}
+                  isBuilt={true}
+                  onToggle={toggle}
+                  onClick={setSelected}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {filtered.length === 0 && (
+          <div className="empty-state">No habitats match your filters.</div>
+        )}
+      </main>
+
+      <HabitatDetail
+        habitat={selected}
+        isBuilt={selected ? built.has(selected.id) : false}
+        onToggle={toggle}
+        onClose={() => setSelected(null)}
+      />
+    </div>
+  );
 }
-
-export default App
