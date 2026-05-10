@@ -304,6 +304,20 @@ export default function App() {
         pokemonName={selectedPokemon}
         onClose={handleClosePokemon}
       />
+
+      <footer className="app-footer">
+        <button
+          className="reset-btn"
+          onClick={() => {
+            if (window.confirm("Are you sure? This will clear all your progress.")) {
+              localStorage.clear();
+              window.location.reload();
+            }
+          }}
+        >
+          Reset Data
+        </button>
+      </footer>
     </div>
   );
 }
