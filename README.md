@@ -2,6 +2,8 @@
 
 A personal habitat tracker for Pokopia. Track which of the 212 habitats you've built (includes the 4 event habitats),  check off caught Pokemon per habitat, and filter by region, category, or status.
 
+Built as a personal tool to track progress in Pokopia =)
+
 **[Live Demo →](https://pokopia-tracker-tau.vercel.app)**
 
 ![app-image](src/assets/app.png)
