@@ -604,3 +604,178 @@ body {
   width: 12px;
   text-align: center;
 }
+
+/* ── TAB NAV ── */
+.tab-nav {
+  display: flex;
+  gap: 6px;
+  margin-top: 14px;
+  border-top: 1px solid rgba(232, 115, 154, 0.1);
+  padding-top: 12px;
+}
+
+.tab-btn {
+  background: none;
+  border: none;
+  border-radius: 99px;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: 'Nunito', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 6px 18px;
+  transition: all 0.18s ease;
+  letter-spacing: 0.1px;
+}
+
+.tab-btn:hover { color: var(--accent); }
+
+.tab-btn.active {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff;
+  box-shadow: 0 3px 12px rgba(232, 115, 154, 0.35);
+}
+
+/* ── POKÉDEX VIEW ── */
+.pokedex-view { display: flex; flex-direction: column; }
+
+.pokedex-sections {
+  padding: 24px 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* ── DEX LIST ROWS ── */
+.dex-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dex-row {
+  display: flex;
+  align-items: center;
+  background: var(--surface);
+  border: 1.5px solid transparent;
+  border-radius: 14px;
+  gap: 0;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.dex-row:hover {
+  border-color: rgba(232, 115, 154, 0.25);
+  box-shadow: var(--shadow);
+}
+
+.dex-row.dex-caught {
+  background: var(--green-bg);
+  border-color: var(--green-border);
+}
+
+.dex-row.dex-caught:hover {
+  border-color: rgba(45, 191, 110, 0.4);
+}
+
+.dex-catch-btn {
+  align-items: center;
+  background: none;
+  border: none;
+  border-right: 1px solid var(--border);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  font-size: 13px;
+  font-weight: 900;
+  height: 44px;
+  justify-content: center;
+  min-width: 44px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.dex-catch-btn:hover {
+  background: var(--pink-bg);
+  color: var(--accent);
+}
+
+.dex-row.dex-caught .dex-catch-btn {
+  color: var(--green);
+  border-right-color: rgba(45, 191, 110, 0.2);
+}
+
+.dex-row.dex-caught .dex-catch-btn:hover {
+  background: rgba(45, 191, 110, 0.15);
+}
+
+.dex-name-btn {
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  flex: 1;
+  font-family: 'Nunito', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 0 10px;
+  text-align: left;
+  height: 44px;
+  transition: color 0.15s;
+}
+
+.dex-name-btn:hover { color: var(--accent); }
+
+.dex-row.dex-caught .dex-name-btn {
+  color: var(--green);
+}
+
+.dex-info-btn {
+  align-items: center;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  font-size: 20px;
+  font-weight: 300;
+  height: 44px;
+  justify-content: center;
+  min-width: 40px;
+  transition: color 0.15s;
+}
+
+.dex-info-btn:hover { color: var(--accent); }
+
+/* ── POKEMON DETAIL EXTRAS ── */
+.pkmn-habitat-count {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.pkmn-habitat-entry {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+}
+
+.pkmn-habitat-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.pkmn-habitat-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text);
+  text-transform: none;
+  letter-spacing: 0;
+  margin-top: 2px;
+}

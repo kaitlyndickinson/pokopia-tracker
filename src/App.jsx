@@ -2,9 +2,12 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { habitats, categories } from "./data/habitats";
 import HabitatCard from "./components/HabitatCard";
 import HabitatDetail from "./components/HabitatDetail";
+import PokedexView from "./components/PokedexView";
+import PokemonDetail from "./components/PokemonDetail";
 import "./App.css";
 
 const POKEMON_KEY = "pokopia-pokemon";
+const CAUGHT_KEY = "pokopia-caught";
 
 const REGIONS = [
   "Withered Wastelands",
@@ -23,7 +26,11 @@ function getStatus(habitat, checked) {
   return "In Progress";
 }
 
+const allPokemon = [...new Set(habitats.flatMap(h => h.pokemon))].sort();
+
 export default function App() {
+  const [activeTab, setActiveTab] = useState("habitats");
+
   const [checked, setChecked] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem(POKEMON_KEY)) || {};
@@ -31,7 +38,19 @@ export default function App() {
       return {};
     }
   });
+
+  const [caught, setCaught] = useState(() => {
+    try {
+      const stored = localStorage.getItem(CAUGHT_KEY);
+      if (stored !== null) return new Set(JSON.parse(stored));
+      return new Set();
+    } catch {
+      return new Set();
+    }
+  });
+
   const [selected, setSelected] = useState(null);
+  const [selectedPokemon, setSelectedPokemon] = useState(null);
   const [filter, setFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [regionFilter, setRegionFilter] = useState("all");
@@ -40,6 +59,10 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem(POKEMON_KEY, JSON.stringify(checked));
   }, [checked]);
+
+  useEffect(() => {
+    localStorage.setItem(CAUGHT_KEY, JSON.stringify([...caught]));
+  }, [caught]);
 
   const togglePokemon = useCallback((habitatId, pokemonName) => {
     setChecked(prev => {
@@ -55,13 +78,25 @@ export default function App() {
     setChecked(prev => ({ ...prev, [habitatId]: list }));
   }, []);
 
+  const toggleCaught = useCallback((name) => {
+    setCaught(prev => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name);
+      else next.add(name);
+      return next;
+    });
+  }, []);
+
   const handleSelect = useCallback((h) => setSelected(h), []);
   const handleClose = useCallback(() => setSelected(null), []);
+  const handleClosePokemon = useCallback(() => setSelectedPokemon(null), []);
 
   const completedCount = useMemo(
     () => habitats.filter(h => getStatus(h, checked) === "Completed").length,
     [checked]
   );
+
+  const caughtCount = caught.size;
 
   const filtered = useMemo(() => habitats.filter(h => {
     const status = getStatus(h, checked);
@@ -86,6 +121,13 @@ export default function App() {
     [filtered, checked]
   );
 
+  const isHabitats = activeTab === "habitats";
+  const progressCount = isHabitats ? completedCount : caughtCount;
+  const progressTotal = isHabitats ? habitats.length : allPokemon.length;
+  const progressLabel = isHabitats
+    ? `${completedCount} / ${habitats.length} completed`
+    : `${caughtCount} / ${allPokemon.length} caught`;
+
   return (
     <div className="app">
       <header className="app-header">
@@ -97,106 +139,131 @@ export default function App() {
           </div>
         </div>
         <div className="progress-section">
-          <span className="progress-label">{completedCount} / {habitats.length} completed</span>
+          <span className="progress-label">{progressLabel}</span>
           <div className="progress-bar-wrap">
             <div
               className="progress-bar-fill"
-              style={{ width: `${(completedCount / habitats.length) * 100}%` }}
+              style={{ width: `${(progressCount / progressTotal) * 100}%` }}
             />
           </div>
         </div>
+        <div className="tab-nav">
+          <button
+            className={`tab-btn ${isHabitats ? "active" : ""}`}
+            onClick={() => setActiveTab("habitats")}
+          >
+            Habitats
+          </button>
+          <button
+            className={`tab-btn ${!isHabitats ? "active" : ""}`}
+            onClick={() => setActiveTab("pokedex")}
+          >
+            Pokédex
+          </button>
+        </div>
       </header>
 
-      <div className="controls">
-        <input
-          className="search-input"
-          placeholder="Search habitats..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
+      {isHabitats ? (
+        <>
+          <div className="controls">
+            <input
+              className="search-input"
+              placeholder="Search habitats..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+            <div className="filter-row">
+              {["all", "needed", "built"].map(f => (
+                <button
+                  key={f}
+                  className={`filter-btn ${filter === f ? "active" : ""}`}
+                  onClick={() => setFilter(f)}
+                >
+                  {f === "all" ? "All" : f === "needed" ? "Still Needed" : "Completed"}
+                </button>
+              ))}
+            </div>
+            <div className="filter-row category-row">
+              <button
+                className={`filter-btn small ${categoryFilter === "all" ? "active" : ""}`}
+                onClick={() => setCategoryFilter("all")}
+              >All Types</button>
+              {categories.map(c => (
+                <button
+                  key={c}
+                  className={`filter-btn small ${categoryFilter === c ? "active" : ""}`}
+                  onClick={() => setCategoryFilter(c)}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <main className="habitat-sections">
+            {(filter === "all" || filter === "needed") && needed.length > 0 && (
+              <section>
+                <div className="section-header-row">
+                  <h2 className="section-heading needed-heading">
+                    Still Needed <span className="count">{needed.length}</span>
+                  </h2>
+                  <select
+                    className="region-select inline"
+                    value={regionFilter}
+                    onChange={e => setRegionFilter(e.target.value)}
+                  >
+                    <option value="all">All Areas</option>
+                    {REGIONS.map(r => (
+                      <option key={r} value={r}>{r}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="habitat-grid">
+                  {needed.map(h => (
+                    <HabitatCard
+                      key={h.id}
+                      habitat={h}
+                      status={getStatus(h, checked)}
+                      checkedCount={(checked[h.id] || []).length}
+                      onClick={handleSelect}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {(filter === "all" || filter === "built") && done.length > 0 && (
+              <section>
+                <h2 className="section-heading built-heading">
+                  Completed <span className="count">{done.length}</span>
+                </h2>
+                <div className="habitat-grid">
+                  {done.map(h => (
+                    <HabitatCard
+                      key={h.id}
+                      habitat={h}
+                      status="Completed"
+                      checkedCount={(checked[h.id] || []).length}
+                      onClick={handleSelect}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {filtered.length === 0 && (
+              <div className="empty-state">No habitats match your filters.</div>
+            )}
+          </main>
+        </>
+      ) : (
+        <PokedexView
+          allPokemon={allPokemon}
+          caught={caught}
+          onToggle={toggleCaught}
+          onSelect={setSelectedPokemon}
         />
-        <div className="filter-row">
-          {["all", "needed", "built"].map(f => (
-            <button
-              key={f}
-              className={`filter-btn ${filter === f ? "active" : ""}`}
-              onClick={() => setFilter(f)}
-            >
-              {f === "all" ? "All" : f === "needed" ? "Still Needed" : "Completed"}
-            </button>
-          ))}
-        </div>
-        <div className="filter-row category-row">
-          <button
-            className={`filter-btn small ${categoryFilter === "all" ? "active" : ""}`}
-            onClick={() => setCategoryFilter("all")}
-          >All Types</button>
-          {categories.map(c => (
-            <button
-              key={c}
-              className={`filter-btn small ${categoryFilter === c ? "active" : ""}`}
-              onClick={() => setCategoryFilter(c)}
-            >
-              {c}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <main className="habitat-sections">
-        {(filter === "all" || filter === "needed") && needed.length > 0 && (
-          <section>
-            <div className="section-header-row">
-              <h2 className="section-heading needed-heading">
-                Still Needed <span className="count">{needed.length}</span>
-              </h2>
-              <select
-                className="region-select inline"
-                value={regionFilter}
-                onChange={e => setRegionFilter(e.target.value)}
-              >
-                <option value="all">All Areas</option>
-                {REGIONS.map(r => (
-                  <option key={r} value={r}>{r}</option>
-                ))}
-              </select>
-            </div>
-            <div className="habitat-grid">
-              {needed.map(h => (
-                <HabitatCard
-                  key={h.id}
-                  habitat={h}
-                  status={getStatus(h, checked)}
-                  checkedCount={(checked[h.id] || []).length}
-                  onClick={handleSelect}
-                />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {(filter === "all" || filter === "built") && done.length > 0 && (
-          <section>
-            <h2 className="section-heading built-heading">
-              Completed <span className="count">{done.length}</span>
-            </h2>
-            <div className="habitat-grid">
-              {done.map(h => (
-                <HabitatCard
-                  key={h.id}
-                  habitat={h}
-                  status="Completed"
-                  checkedCount={(checked[h.id] || []).length}
-                  onClick={handleSelect}
-                />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {filtered.length === 0 && (
-          <div className="empty-state">No habitats match your filters.</div>
-        )}
-      </main>
+      )}
 
       <HabitatDetail
         habitat={selected}
@@ -205,6 +272,11 @@ export default function App() {
         onTogglePokemon={togglePokemon}
         onBulkSet={bulkSetPokemon}
         onClose={handleClose}
+      />
+
+      <PokemonDetail
+        pokemonName={selectedPokemon}
+        onClose={handleClosePokemon}
       />
     </div>
   );
