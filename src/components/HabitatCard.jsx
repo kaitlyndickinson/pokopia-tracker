@@ -1,9 +1,10 @@
 import { memo } from "react";
 
-function HabitatCard({ habitat, isBuilt, onToggle, onClick }) {
+function HabitatCard({ habitat, status, checkedCount, onClick }) {
+  const statusClass = status.toLowerCase().replace(" ", "-");
   return (
     <div
-      className={`habitat-card ${isBuilt ? "built" : ""}`}
+      className={`habitat-card status-${statusClass}`}
       onClick={() => onClick(habitat)}
     >
       <div className="card-header">
@@ -20,12 +21,12 @@ function HabitatCard({ habitat, isBuilt, onToggle, onClick }) {
           {habitat.pokemon.length > 3 && ` +${habitat.pokemon.length - 3} more`}
         </p>
       </div>
-      <button
-        className={`toggle-btn ${isBuilt ? "unmark" : "mark"}`}
-        onClick={e => { e.stopPropagation(); onToggle(habitat.id); }}
-      >
-        {isBuilt ? "✓ Built" : "+ Mark Built"}
-      </button>
+      <div className="card-footer">
+        <span className={`status-badge status-${statusClass}`}>{status}</span>
+        {habitat.pokemon.length > 0 && status !== "Completed" && (
+          <span className="progress-fraction">{checkedCount}/{habitat.pokemon.length}</span>
+        )}
+      </div>
     </div>
   );
 }

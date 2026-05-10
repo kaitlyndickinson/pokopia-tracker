@@ -228,7 +228,7 @@ body {
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   box-shadow: var(--shadow);
   content-visibility: auto;
-  contain-intrinsic-size: 0 155px;
+  contain-intrinsic-size: 0 165px;
 }
 
 .habitat-card:hover {
@@ -237,13 +237,23 @@ body {
   box-shadow: var(--shadow-hover);
 }
 
-.habitat-card.built {
+.habitat-card.status-in-progress {
+  background: #FFFDF5;
+  border-color: rgba(255, 159, 10, 0.18);
+}
+
+.habitat-card.status-in-progress:hover {
+  border-color: rgba(255, 159, 10, 0.38);
+  box-shadow: 0 10px 32px rgba(255, 159, 10, 0.14);
+}
+
+.habitat-card.status-completed {
   background: var(--green-bg);
   border-color: var(--green-border);
   box-shadow: var(--shadow-green);
 }
 
-.habitat-card.built:hover {
+.habitat-card.status-completed:hover {
   border-color: rgba(45, 191, 110, 0.5);
   box-shadow: 0 10px 32px rgba(45, 191, 110, 0.22);
 }
@@ -307,38 +317,46 @@ body {
   flex: 1;
 }
 
-/* ── TOGGLE BUTTON ── */
-.toggle-btn {
-  border: none;
-  border-radius: 99px;
-  cursor: pointer;
-  font-family: 'Nunito', sans-serif;
-  font-size: 11px;
+/* ── CARD FOOTER ── */
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+.progress-fraction {
+  font-size: 10px;
   font-weight: 800;
-  margin-top: 6px;
-  padding: 7px 12px;
-  transition: all 0.18s ease;
+  color: var(--text-muted);
+  font-family: 'Space Mono', monospace;
 }
 
-.toggle-btn.mark {
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
-  color: #fff;
-  box-shadow: 0 3px 12px rgba(232, 115, 154, 0.38);
+/* ── STATUS BADGES ── */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 99px;
+  letter-spacing: 0.2px;
 }
 
-.toggle-btn.mark:hover {
-  box-shadow: 0 5px 18px rgba(232, 115, 154, 0.52);
-  transform: scale(1.03);
+.status-badge.status-not-started {
+  background: rgba(142, 142, 147, 0.1);
+  color: var(--text-muted);
 }
 
-.toggle-btn.unmark {
-  background: rgba(45, 191, 110, 0.13);
+.status-badge.status-in-progress {
+  background: rgba(255, 159, 10, 0.12);
+  color: #B87800;
+}
+
+.status-badge.status-completed {
+  background: var(--green-bg);
   color: var(--green);
 }
-
-.toggle-btn.unmark:hover { background: rgba(45, 191, 110, 0.22); }
-
-.toggle-btn.full-width { width: 100%; padding: 14px; font-size: 15px; }
 
 /* ── DETAIL OVERLAY ── */
 .detail-overlay {
@@ -502,4 +520,87 @@ body {
   padding: 5px 28px 5px 12px;
   border-radius: 99px;
   background-position: right 10px center;
+}
+
+/* ── DETAIL PANEL EXTRAS ── */
+.detail-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pokemon-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mark-all-btn {
+  background: none;
+  border: 1.5px solid rgba(0, 0, 0, 0.08);
+  border-radius: 99px;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: 'Nunito', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 12px;
+  transition: all 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.mark-all-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.no-pokemon-note {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-align: center;
+  padding: 16px 0 8px;
+}
+
+/* ── POKEMON CHECKBOXES ── */
+.pokemon-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--pink-bg);
+  border: 1.5px solid transparent;
+  border-radius: 99px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 13px 6px 10px;
+  color: var(--accent);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.pokemon-check:hover {
+  border-color: rgba(232, 115, 154, 0.4);
+  transform: scale(1.03);
+}
+
+.pokemon-check.is-checked {
+  background: var(--green-bg);
+  color: var(--green);
+  border-color: var(--green-border);
+}
+
+.pokemon-check.is-checked:hover {
+  border-color: rgba(45, 191, 110, 0.5);
+}
+
+.check-icon {
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+  width: 12px;
+  text-align: center;
 }

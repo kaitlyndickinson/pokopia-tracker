@@ -1,5 +1,10 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { habitats, categories } from "./data/habitats";
+import HabitatCard from "./components/HabitatCard";
+import HabitatDetail from "./components/HabitatDetail";
+import "./App.css";
+
+const POKEMON_KEY = "pokopia-pokemon";
 
 const REGIONS = [
   "Withered Wastelands",
@@ -9,52 +14,77 @@ const REGIONS = [
   "Palette Town",
   "Dream Island",
 ];
-import HabitatCard from "./components/HabitatCard";
-import HabitatDetail from "./components/HabitatDetail";
-import "./App.css";
 
-const STORAGE_KEY = "pokopia-built";
+function getStatus(habitat, checked) {
+  if (habitat.pokemon.length === 0) return "Not Started";
+  const c = checked[habitat.id];
+  if (!c || c.length === 0) return "Not Started";
+  if (c.length >= habitat.pokemon.length) return "Completed";
+  return "In Progress";
+}
 
 export default function App() {
-  const [built, setBuilt] = useState(() => {
+  const [checked, setChecked] = useState(() => {
     try {
-      return new Set(JSON.parse(localStorage.getItem(STORAGE_KEY)) || []);
+      return JSON.parse(localStorage.getItem(POKEMON_KEY)) || {};
     } catch {
-      return new Set();
+      return {};
     }
   });
   const [selected, setSelected] = useState(null);
-  const [filter, setFilter] = useState("all"); // "all" | "needed" | "built"
+  const [filter, setFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [regionFilter, setRegionFilter] = useState("all");
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([...built]));
-  }, [built]);
+    localStorage.setItem(POKEMON_KEY, JSON.stringify(checked));
+  }, [checked]);
 
-  const toggle = useCallback((id) => {
-    setBuilt(prev => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
+  const togglePokemon = useCallback((habitatId, pokemonName) => {
+    setChecked(prev => {
+      const current = prev[habitatId] || [];
+      const next = current.includes(pokemonName)
+        ? current.filter(p => p !== pokemonName)
+        : [...current, pokemonName];
+      return { ...prev, [habitatId]: next };
     });
+  }, []);
+
+  const bulkSetPokemon = useCallback((habitatId, list) => {
+    setChecked(prev => ({ ...prev, [habitatId]: list }));
   }, []);
 
   const handleSelect = useCallback((h) => setSelected(h), []);
   const handleClose = useCallback(() => setSelected(null), []);
 
+  const completedCount = useMemo(
+    () => habitats.filter(h => getStatus(h, checked) === "Completed").length,
+    [checked]
+  );
+
   const filtered = useMemo(() => habitats.filter(h => {
-    if (filter === "built" && !built.has(h.id)) return false;
-    if (filter === "needed" && built.has(h.id)) return false;
+    const status = getStatus(h, checked);
+    if (filter === "built" && status !== "Completed") return false;
+    if (filter === "needed" && status === "Completed") return false;
     if (categoryFilter !== "all" && h.category !== categoryFilter) return false;
     if (regionFilter !== "all" && h.region !== regionFilter) return false;
     if (search && !h.name.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
-  }), [built, filter, categoryFilter, regionFilter, search]);
+  }), [checked, filter, categoryFilter, regionFilter, search]);
 
-  const needed = useMemo(() => filtered.filter(h => !built.has(h.id)), [filtered, built]);
-  const done = useMemo(() => filtered.filter(h => built.has(h.id)), [filtered, built]);
+  const needed = useMemo(
+    () => filtered.filter(h => {
+      const s = getStatus(h, checked);
+      return s === "Not Started" || s === "In Progress";
+    }),
+    [filtered, checked]
+  );
+
+  const done = useMemo(
+    () => filtered.filter(h => getStatus(h, checked) === "Completed"),
+    [filtered, checked]
+  );
 
   return (
     <div className="app">
@@ -67,11 +97,11 @@ export default function App() {
           </div>
         </div>
         <div className="progress-section">
-          <span className="progress-label">{built.size} / {habitats.length} built</span>
+          <span className="progress-label">{completedCount} / {habitats.length} completed</span>
           <div className="progress-bar-wrap">
             <div
               className="progress-bar-fill"
-              style={{ width: `${(built.size / habitats.length) * 100}%` }}
+              style={{ width: `${(completedCount / habitats.length) * 100}%` }}
             />
           </div>
         </div>
@@ -91,7 +121,7 @@ export default function App() {
               className={`filter-btn ${filter === f ? "active" : ""}`}
               onClick={() => setFilter(f)}
             >
-              {f === "all" ? "All" : f === "needed" ? "Still Needed" : "Built"}
+              {f === "all" ? "All" : f === "needed" ? "Still Needed" : "Completed"}
             </button>
           ))}
         </div>
@@ -135,8 +165,8 @@ export default function App() {
                 <HabitatCard
                   key={h.id}
                   habitat={h}
-                  isBuilt={false}
-                  onToggle={toggle}
+                  status={getStatus(h, checked)}
+                  checkedCount={(checked[h.id] || []).length}
                   onClick={handleSelect}
                 />
               ))}
@@ -147,15 +177,15 @@ export default function App() {
         {(filter === "all" || filter === "built") && done.length > 0 && (
           <section>
             <h2 className="section-heading built-heading">
-              Built <span className="count">{done.length}</span>
+              Completed <span className="count">{done.length}</span>
             </h2>
             <div className="habitat-grid">
               {done.map(h => (
                 <HabitatCard
                   key={h.id}
                   habitat={h}
-                  isBuilt={true}
-                  onToggle={toggle}
+                  status="Completed"
+                  checkedCount={(checked[h.id] || []).length}
                   onClick={handleSelect}
                 />
               ))}
@@ -170,8 +200,10 @@ export default function App() {
 
       <HabitatDetail
         habitat={selected}
-        isBuilt={selected ? built.has(selected.id) : false}
-        onToggle={toggle}
+        status={selected ? getStatus(selected, checked) : "Not Started"}
+        checkedPokemon={selected ? (checked[selected.id] || []) : []}
+        onTogglePokemon={togglePokemon}
+        onBulkSet={bulkSetPokemon}
         onClose={handleClose}
       />
     </div>
