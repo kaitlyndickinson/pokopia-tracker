@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { habitats, categories } from "./data/habitats";
 import HabitatCard from "./components/HabitatCard";
 import HabitatDetail from "./components/HabitatDetail";
@@ -28,25 +28,26 @@ function getStatus(habitat, checked) {
 
 const allPokemon = [...new Set(habitats.flatMap(h => h.pokemon))].sort();
 
+const pokemonByRegion = new Map(
+  REGIONS.map(r => [
+    r,
+    new Set(habitats.filter(h => h.region === r).flatMap(h => h.pokemon)),
+  ])
+);
+
 export default function App() {
   const [activeTab, setActiveTab] = useState("habitats");
 
   const [checked, setChecked] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem(POKEMON_KEY)) || {};
-    } catch {
-      return {};
-    }
+    try { return JSON.parse(localStorage.getItem(POKEMON_KEY)) || {}; }
+    catch { return {}; }
   });
 
   const [caught, setCaught] = useState(() => {
     try {
       const stored = localStorage.getItem(CAUGHT_KEY);
-      if (stored !== null) return new Set(JSON.parse(stored));
-      return new Set();
-    } catch {
-      return new Set();
-    }
+      return stored !== null ? new Set(JSON.parse(stored)) : new Set();
+    } catch { return new Set(); }
   });
 
   const [selected, setSelected] = useState(null);
@@ -54,6 +55,7 @@ export default function App() {
   const [filter, setFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [regionFilter, setRegionFilter] = useState("all");
+  const [dexRegionFilter, setDexRegionFilter] = useState("all");
   const [search, setSearch] = useState("");
 
   useEffect(() => {
@@ -87,18 +89,49 @@ export default function App() {
     });
   }, []);
 
+  const handleExportCsv = useCallback(() => {
+    const lines = ["name,caught", ...allPokemon.map(p => `${p},${caught.has(p)}`)];
+    const blob = new Blob([lines.join("\n")], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "pokopia-caught.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [caught]);
+
+  const handleImportCsv = useCallback((file) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const lines = e.target.result.trim().split("\n").slice(1);
+      const imported = new Set();
+      for (const line of lines) {
+        const comma = line.indexOf(",");
+        if (comma === -1) continue;
+        const name = line.slice(0, comma).trim();
+        const val = line.slice(comma + 1).trim().toLowerCase();
+        if (name && val === "true") imported.add(name);
+      }
+      setCaught(imported);
+    };
+    reader.readAsText(file);
+  }, []);
+
   const handleSelect = useCallback((h) => setSelected(h), []);
   const handleClose = useCallback(() => setSelected(null), []);
   const handleClosePokemon = useCallback(() => setSelectedPokemon(null), []);
 
-  const completedCount = useMemo(
-    () => habitats.filter(h => getStatus(h, checked) === "Completed").length,
-    [checked]
-  );
+  const isHabitats = activeTab === "habitats";
 
+  const completedCount = habitats.filter(h => getStatus(h, checked) === "Completed").length;
   const caughtCount = caught.size;
+  const progressCount = isHabitats ? completedCount : caughtCount;
+  const progressTotal = isHabitats ? habitats.length : allPokemon.length;
+  const progressLabel = isHabitats
+    ? `${completedCount} / ${habitats.length} completed`
+    : `${caughtCount} / ${allPokemon.length} caught`;
 
-  const filtered = useMemo(() => habitats.filter(h => {
+  const filtered = habitats.filter(h => {
     const status = getStatus(h, checked);
     if (filter === "built" && status !== "Completed") return false;
     if (filter === "needed" && status === "Completed") return false;
@@ -106,27 +139,14 @@ export default function App() {
     if (regionFilter !== "all" && h.region !== regionFilter) return false;
     if (search && !h.name.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
-  }), [checked, filter, categoryFilter, regionFilter, search]);
+  });
 
-  const needed = useMemo(
-    () => filtered.filter(h => {
-      const s = getStatus(h, checked);
-      return s === "Not Started" || s === "In Progress";
-    }),
-    [filtered, checked]
-  );
+  const needed = filtered.filter(h => {
+    const s = getStatus(h, checked);
+    return s === "Not Started" || s === "In Progress";
+  });
 
-  const done = useMemo(
-    () => filtered.filter(h => getStatus(h, checked) === "Completed"),
-    [filtered, checked]
-  );
-
-  const isHabitats = activeTab === "habitats";
-  const progressCount = isHabitats ? completedCount : caughtCount;
-  const progressTotal = isHabitats ? habitats.length : allPokemon.length;
-  const progressLabel = isHabitats
-    ? `${completedCount} / ${habitats.length} completed`
-    : `${caughtCount} / ${allPokemon.length} caught`;
+  const done = filtered.filter(h => getStatus(h, checked) === "Completed");
 
   return (
     <div className="app">
@@ -262,6 +282,12 @@ export default function App() {
           caught={caught}
           onToggle={toggleCaught}
           onSelect={setSelectedPokemon}
+          regions={REGIONS}
+          regionFilter={dexRegionFilter}
+          onRegionChange={setDexRegionFilter}
+          pokemonByRegion={pokemonByRegion}
+          onExport={handleExportCsv}
+          onImport={handleImportCsv}
         />
       )}
 

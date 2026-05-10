@@ -1,4 +1,4 @@
-import { useState, useMemo, memo } from "react";
+import { useState, useMemo, useRef, memo } from "react";
 
 function PokemonRow({ name, caught, onToggle, onSelect }) {
   return (
@@ -22,16 +22,33 @@ function PokemonRow({ name, caught, onToggle, onSelect }) {
 
 const PokemonRowMemo = memo(PokemonRow);
 
-export default function PokedexView({ allPokemon, caught, onToggle, onSelect }) {
+export default function PokedexView({
+  allPokemon, caught, onToggle, onSelect,
+  regions, regionFilter, onRegionChange, pokemonByRegion,
+  onExport, onImport,
+}) {
   const [search, setSearch] = useState("");
+  const importRef = useRef(null);
+
+  const regionFiltered = useMemo(() => {
+    if (regionFilter === "all") return allPokemon;
+    const regionSet = pokemonByRegion.get(regionFilter) || new Set();
+    return allPokemon.filter(p => regionSet.has(p));
+  }, [allPokemon, regionFilter, pokemonByRegion]);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    return q ? allPokemon.filter(p => p.toLowerCase().includes(q)) : allPokemon;
-  }, [allPokemon, search]);
+    return q ? regionFiltered.filter(p => p.toLowerCase().includes(q)) : regionFiltered;
+  }, [regionFiltered, search]);
 
   const uncaught = useMemo(() => filtered.filter(p => !caught.has(p)), [filtered, caught]);
   const caughtList = useMemo(() => filtered.filter(p => caught.has(p)), [filtered, caught]);
+
+  function handleFileChange(e) {
+    const file = e.target.files[0];
+    if (file) onImport(file);
+    e.target.value = "";
+  }
 
   return (
     <div className="pokedex-view">
@@ -42,6 +59,29 @@ export default function PokedexView({ allPokemon, caught, onToggle, onSelect }) 
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
+        <div className="dex-toolbar">
+          <select
+            className="region-select inline"
+            value={regionFilter}
+            onChange={e => onRegionChange(e.target.value)}
+          >
+            <option value="all">All Areas</option>
+            {regions.map(r => (
+              <option key={r} value={r}>{r}</option>
+            ))}
+          </select>
+          <div className="csv-btns">
+            <button className="csv-btn" onClick={onExport}>Export CSV</button>
+            <button className="csv-btn" onClick={() => importRef.current.click()}>Import CSV</button>
+            <input
+              ref={importRef}
+              type="file"
+              accept=".csv"
+              style={{ display: "none" }}
+              onChange={handleFileChange}
+            />
+          </div>
+        </div>
       </div>
 
       <div className="pokedex-sections">
@@ -72,7 +112,7 @@ export default function PokedexView({ allPokemon, caught, onToggle, onSelect }) 
         )}
 
         {filtered.length === 0 && (
-          <div className="empty-state">No Pokémon match your search.</div>
+          <div className="empty-state">No Pokémon match your filters.</div>
         )}
       </div>
     </div>
