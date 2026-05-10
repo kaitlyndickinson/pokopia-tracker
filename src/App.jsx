@@ -1,5 +1,14 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { habitats, categories } from "./data/habitats";
+
+const REGIONS = [
+  "Withered Wastelands",
+  "Bleak Beach",
+  "Rocky Ridges",
+  "Sparkling Skylands",
+  "Palette Town",
+  "Dream Island",
+];
 import HabitatCard from "./components/HabitatCard";
 import HabitatDetail from "./components/HabitatDetail";
 import "./App.css";
@@ -17,6 +26,7 @@ export default function App() {
   const [selected, setSelected] = useState(null);
   const [filter, setFilter] = useState("all"); // "all" | "needed" | "built"
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [regionFilter, setRegionFilter] = useState("all");
   const [search, setSearch] = useState("");
 
   useEffect(() => {
@@ -38,9 +48,10 @@ export default function App() {
     if (filter === "built" && !built.has(h.id)) return false;
     if (filter === "needed" && built.has(h.id)) return false;
     if (categoryFilter !== "all" && h.category !== categoryFilter) return false;
+    if (regionFilter !== "all" && h.region !== regionFilter) return false;
     if (search && !h.name.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
-  }), [built, filter, categoryFilter, search]);
+  }), [built, filter, categoryFilter, regionFilter, search]);
 
   const needed = useMemo(() => filtered.filter(h => !built.has(h.id)), [filtered, built]);
   const done = useMemo(() => filtered.filter(h => built.has(h.id)), [filtered, built]);
@@ -49,15 +60,20 @@ export default function App() {
     <div className="app">
       <header className="app-header">
         <div className="header-title">
-          <span className="pokeball">◉</span>
-          <h1>Pokopia<span className="accent">Tracker</span></h1>
+          <span className="pokeball">✿</span>
+          <div className="header-text">
+            <h1>Pokopia<span className="accent">Tracker</span></h1>
+            <p className="header-sub">your habitat companion</p>
+          </div>
         </div>
-        <div className="progress-bar-wrap">
-          <div
-            className="progress-bar-fill"
-            style={{ width: `${(built.size / habitats.length) * 100}%` }}
-          />
+        <div className="progress-section">
           <span className="progress-label">{built.size} / {habitats.length} built</span>
+          <div className="progress-bar-wrap">
+            <div
+              className="progress-bar-fill"
+              style={{ width: `${(built.size / habitats.length) * 100}%` }}
+            />
+          </div>
         </div>
       </header>
 
@@ -99,9 +115,21 @@ export default function App() {
       <main className="habitat-sections">
         {(filter === "all" || filter === "needed") && needed.length > 0 && (
           <section>
-            <h2 className="section-heading needed-heading">
-              Still Needed <span className="count">{needed.length}</span>
-            </h2>
+            <div className="section-header-row">
+              <h2 className="section-heading needed-heading">
+                Still Needed <span className="count">{needed.length}</span>
+              </h2>
+              <select
+                className="region-select inline"
+                value={regionFilter}
+                onChange={e => setRegionFilter(e.target.value)}
+              >
+                <option value="all">All Areas</option>
+                {REGIONS.map(r => (
+                  <option key={r} value={r}>{r}</option>
+                ))}
+              </select>
+            </div>
             <div className="habitat-grid">
               {needed.map(h => (
                 <HabitatCard

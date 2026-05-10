@@ -14,6 +14,7 @@ function HabitatCard({ habitat, isBuilt, onToggle, onClick }) {
       </div>
       <div className="card-body">
         <h3 className="habitat-name">{habitat.name}</h3>
+        {habitat.region && <p className="habitat-region">{habitat.region}</p>}
         <p className="pokemon-preview">
           {habitat.pokemon.slice(0, 3).join(", ")}
           {habitat.pokemon.length > 3 && ` +${habitat.pokemon.length - 3} more`}
