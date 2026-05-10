@@ -1,16 +1,38 @@
-# React + Vite
+# Pokopia Tracker
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A personal habitat tracker for Pokopia. Track which of the 212 habitats you've built (includes the 4 event habitats),  check off caught Pokemon per habitat, and filter by region, category, or status.
 
-Currently, two official plugins are available:
+**[Live Demo →](https://pokopia-tracker-tau.vercel.app)**
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+![app-image](src/assets/app.png)
 
-## React Compiler
+![app-detail-card](src/assets/app-card.png)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Features
+- 212 habitats with materials and Pokemon data (across all regions)
+- Per-Pokemon checkboxes within the individual habitat cards
+- Filter by region, category, or search by name
+- Progress persists via localStorage; no account needed
 
-## Expanding the ESLint configuration
+## Tech Stack
+React 19 · Vite · Pure CSS
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Getting Started
+
+```bash
+npm install
+npm run dev
+```
+
+Then open [http://localhost:5173](http://localhost:5173).
+
+## Scripts
+
+| Command | Description |
+|---|---|
+| `npm run dev` | Start dev server |
+| `npm run build` | Build for production |
+| `npm run preview` | Preview production build |
+| `npm run lint` | Run ESLint |
+
+
