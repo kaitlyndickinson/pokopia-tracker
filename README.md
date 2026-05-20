@@ -14,10 +14,10 @@ There are other community trackers out there that are way more comprehensive, th
 - **No account, no server**: everything lives in localStorage. I deployed it on Vercel so I could easily have it as a web app on my phone.
 
 ## Data / Current State
-- 233 habitats (209 unique + 3 events + 21 multi-region entries for habitats that span multiple areas)
+- 221 habitats (209 unique + 9 Palette Town stubs + 3 events)
 - 303 Pokémon (includes Pokopia-exclusive Pokémon and counted-separately variant forms)
 
-Habitat and Pokémon data was compiled from Serebii and community resources. The Pokémon list is treated as the source of truth; the 233 habitats map each one to a region (Withered Wastelands, Bleak Beach, Rocky Ridges, Sparkling Skylands, Palette Town, Dream Island) and a category. Pokopia is still a relatively new game so the data may have gaps — PRs welcome if you spot something wrong.
+Habitat and Pokémon data was compiled from Serebii and community resources. The Pokémon list is treated as the source of truth; habitats are categorized and assigned to a region (Withered Wastelands, Bleak Beach, Rocky Ridges, Sparkling Skylands, Palette Town, Dream Island) based on where they were first catalogued. **Region assignments are approximate** — most habitats likely appear across all regions in-game, but the data here reflects where the habitat was sourced from rather than an exhaustive location list. Pokopia is still a relatively new game so the data may have gaps — PRs welcome if you spot something wrong.
 
 ## Tech Stack
 
