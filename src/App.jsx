@@ -10,7 +10,7 @@ import "./App.css";
 const POKEMON_KEY = "pokopia-pokemon";
 const CAUGHT_KEY = "pokopia-caught";
 const EXPORT_KEY = "pokopia-last-export";
-const STALE_MS = 7 * 24 * 60 * 60 * 1000;
+
 
 const REGIONS = [
   "Withered Wastelands",
@@ -89,7 +89,7 @@ export default function App() {
   const [dexRegionFilter, setDexRegionFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [toast, setToast] = useState(null);
-  const [warningDismissed, setWarningDismissed] = useState(false);
+
   const [lastExported, setLastExported] = useState(() => {
     const v = localStorage.getItem(EXPORT_KEY);
     return v ? parseInt(v, 10) : null;
@@ -237,10 +237,6 @@ export default function App() {
 
   const isHabitats = activeTab === "habitats";
 
-  const hasData = caught.size > 0 || Object.values(checked).some(list => list && list.length > 0);
-  const isStale = !lastExported || (Date.now() - lastExported) > STALE_MS;
-  const showWarning = hasData && isStale && !warningDismissed;
-
   const completedCount = habitats.filter(h => getStatus(h, checked) === "Completed").length;
   const caughtCount = caught.size;
   const progressCount = isHabitats ? completedCount : caughtCount;
@@ -301,13 +297,6 @@ export default function App() {
         </div>
       </header>
 
-      {showWarning && (
-        <div className="stale-warning">
-          <span>💾 Haven't exported your data in a while — export CSV to back it up.</span>
-          <button className="stale-export-btn" onClick={handleExportCsv}>Export</button>
-          <button className="stale-dismiss-btn" onClick={() => setWarningDismissed(true)}>✕</button>
-        </div>
-      )}
 
       {isHabitats ? (
         <>

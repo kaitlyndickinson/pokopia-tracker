@@ -883,50 +883,6 @@ body {
   flex-shrink: 0;
 }
 
-/* ── STALE WARNING BANNER ── */
-.stale-warning {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: #FFFBEA;
-  border-bottom: 1.5px solid rgba(200, 160, 0, 0.2);
-  color: #7A5C00;
-  font-size: 13px;
-  font-weight: 700;
-  padding: 10px 20px;
-}
-
-.stale-warning span { flex: 1; }
-
-.stale-export-btn {
-  background: rgba(200, 160, 0, 0.12);
-  border: 1.5px solid rgba(200, 160, 0, 0.3);
-  border-radius: 99px;
-  color: #7A5C00;
-  cursor: pointer;
-  font-family: 'Nunito', sans-serif;
-  font-size: 12px;
-  font-weight: 800;
-  padding: 4px 14px;
-  transition: background 0.15s;
-  white-space: nowrap;
-}
-
-.stale-export-btn:hover { background: rgba(200, 160, 0, 0.22); }
-
-.stale-dismiss-btn {
-  background: none;
-  border: none;
-  color: #A08030;
-  cursor: pointer;
-  font-size: 14px;
-  line-height: 1;
-  padding: 4px 6px;
-  opacity: 0.6;
-  transition: opacity 0.15s;
-}
-
-.stale-dismiss-btn:hover { opacity: 1; }
 
 /* ── TOAST ── */
 @keyframes toast-in {
