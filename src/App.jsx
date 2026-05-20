@@ -21,6 +21,19 @@ const REGIONS = [
   "Dream Island",
 ];
 
+function relativeTime(ts) {
+  if (!ts) return "Never exported";
+  const diff = Date.now() - ts;
+  const mins = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins} minute${mins === 1 ? "" : "s"} ago`;
+  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+  if (days === 1) return "Yesterday";
+  return `${days} days ago`;
+}
+
 function getStatus(habitat, checked) {
   if (habitat.pokemon.length === 0) return "Not Started";
   const c = checked[habitat.id];
@@ -431,15 +444,18 @@ export default function App() {
         <button
           className="reset-btn"
           onClick={() => {
-            if (window.confirm("Are you sure? This will clear all your progress.")) {
+            handleExportCsv();
+            if (window.confirm("Your data has been exported. Are you sure you want to reset all progress?")) {
               setChecked({});
               setCaught(new Set());
+              setLastExported(null);
               localStorage.clear();
             }
           }}
         >
           Reset Data
         </button>
+        <p className="footer-export-note">Last exported: {relativeTime(lastExported)}</p>
       </footer>
 
       {toast && <div className="toast">{toast}</div>}
