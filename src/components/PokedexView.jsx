@@ -12,9 +12,10 @@ const REGION_ABBR = {
 
 const pokemonRegions = new Map();
 for (const h of habitats) {
+  const hRegions = h.regions || (h.region ? [h.region] : []);
   for (const p of h.pokemon) {
     if (!pokemonRegions.has(p)) pokemonRegions.set(p, new Set());
-    pokemonRegions.get(p).add(h.region);
+    for (const r of hRegions) pokemonRegions.get(p).add(r);
   }
 }
 
