@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { habitats, categories } from "./data/habitats";
+import { allPokemon } from "./data/pokemon";
 import HabitatCard from "./components/HabitatCard";
 import HabitatDetail from "./components/HabitatDetail";
 import PokedexView from "./components/PokedexView";
@@ -25,8 +26,6 @@ function getStatus(habitat, checked) {
   if (c.length >= habitat.pokemon.length) return "Completed";
   return "In Progress";
 }
-
-const allPokemon = [...new Set(habitats.flatMap(h => h.pokemon))].sort();
 
 const pokemonByRegion = new Map(
   REGIONS.map(r => [
