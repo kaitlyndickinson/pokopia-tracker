@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, memo } from "react";
+import { useState, useMemo, memo } from "react";
 import { habitats } from "../data/habitats";
 
 const REGION_ABBR = {
@@ -54,7 +54,6 @@ export default function PokedexView({
 }) {
   const [search, setSearch] = useState("");
   const [caughtAtBottom, setCaughtAtBottom] = useState(true);
-  const importRef = useRef(null);
 
   const regionFiltered = useMemo(() => {
     if (regionFilter === "all") return allPokemon;
@@ -106,14 +105,15 @@ export default function PokedexView({
           </label>
           <div className="csv-btns">
             <button className="csv-btn" onClick={onExport}>Export CSV</button>
-            <button className="csv-btn" onClick={() => importRef.current.click()}>Import CSV</button>
-            <input
-              ref={importRef}
-              type="file"
-              accept=".csv"
-              style={{ display: "none" }}
-              onChange={handleFileChange}
-            />
+            <label className="csv-btn">
+              Import CSV
+              <input
+                type="file"
+                accept=".csv,text/csv"
+                style={{ display: "none" }}
+                onChange={handleFileChange}
+              />
+            </label>
           </div>
         </div>
       </div>
