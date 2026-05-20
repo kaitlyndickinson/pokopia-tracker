@@ -253,7 +253,7 @@ export default function App() {
           <span className="pokeball">✿</span>
           <div className="header-text">
             <h1>Pokopia<span className="accent">Tracker</span></h1>
-            <p className="header-sub">your habitat companion</p>
+            <p className="header-sub">Personal habitat and Pokémon tracker for Pokopia.</p>
           </div>
         </div>
         <div className="progress-section">
