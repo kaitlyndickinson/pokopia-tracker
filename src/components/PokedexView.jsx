@@ -1,6 +1,24 @@
 import { useState, useMemo, useRef, memo } from "react";
+import { habitats } from "../data/habitats";
 
-function PokemonRow({ name, caught, onToggle, onSelect }) {
+const REGION_ABBR = {
+  "Withered Wastelands": "WW",
+  "Bleak Beach": "BB",
+  "Rocky Ridges": "RR",
+  "Sparkling Skylands": "SS",
+  "Palette Town": "PT",
+  "Dream Island": "DI",
+};
+
+const pokemonRegions = new Map();
+for (const h of habitats) {
+  for (const p of h.pokemon) {
+    if (!pokemonRegions.has(p)) pokemonRegions.set(p, new Set());
+    pokemonRegions.get(p).add(h.region);
+  }
+}
+
+function PokemonRow({ name, caught, regions, onToggle, onSelect }) {
   return (
     <div className={`dex-row ${caught ? "dex-caught" : ""}`}>
       <button
@@ -13,6 +31,13 @@ function PokemonRow({ name, caught, onToggle, onSelect }) {
       <button className="dex-name-btn" onClick={() => onSelect(name)}>
         {name}
       </button>
+      {regions && regions.size > 0 && (
+        <div className="dex-region-tags">
+          {[...regions].map(r => (
+            <span key={r} className="dex-region-tag">{REGION_ABBR[r] ?? r}</span>
+          ))}
+        </div>
+      )}
       <button className="dex-info-btn" onClick={() => onSelect(name)} aria-label={`View ${name} habitats`}>
         ›
       </button>
@@ -28,6 +53,7 @@ export default function PokedexView({
   onExport, onImport,
 }) {
   const [search, setSearch] = useState("");
+  const [caughtAtBottom, setCaughtAtBottom] = useState(true);
   const importRef = useRef(null);
 
   const regionFiltered = useMemo(() => {
@@ -70,6 +96,14 @@ export default function PokedexView({
               <option key={r} value={r}>{r}</option>
             ))}
           </select>
+          <label className="dex-sort-toggle">
+            <input
+              type="checkbox"
+              checked={caughtAtBottom}
+              onChange={e => setCaughtAtBottom(e.target.checked)}
+            />
+            Caught at bottom
+          </label>
           <div className="csv-btns">
             <button className="csv-btn" onClick={onExport}>Export CSV</button>
             <button className="csv-btn" onClick={() => importRef.current.click()}>Import CSV</button>
@@ -85,30 +119,44 @@ export default function PokedexView({
       </div>
 
       <div className="pokedex-sections">
-        {uncaught.length > 0 && (
-          <section>
-            <h2 className="section-heading needed-heading">
-              Still Needed <span className="count">{uncaught.length}</span>
-            </h2>
-            <div className="dex-list">
-              {uncaught.map(p => (
-                <PokemonRowMemo key={p} name={p} caught={false} onToggle={onToggle} onSelect={onSelect} />
-              ))}
-            </div>
-          </section>
-        )}
+        {caughtAtBottom ? (
+          <>
+            {uncaught.length > 0 && (
+              <section>
+                <h2 className="section-heading needed-heading">
+                  Still Needed <span className="count">{uncaught.length}</span>
+                </h2>
+                <div className="dex-list">
+                  {uncaught.map(p => (
+                    <PokemonRowMemo key={p} name={p} caught={false} regions={pokemonRegions.get(p)} onToggle={onToggle} onSelect={onSelect} />
+                  ))}
+                </div>
+              </section>
+            )}
 
-        {caughtList.length > 0 && (
-          <section>
-            <h2 className="section-heading built-heading">
-              Caught <span className="count">{caughtList.length}</span>
-            </h2>
-            <div className="dex-list">
-              {caughtList.map(p => (
-                <PokemonRowMemo key={p} name={p} caught={true} onToggle={onToggle} onSelect={onSelect} />
-              ))}
-            </div>
-          </section>
+            {caughtList.length > 0 && (
+              <section>
+                <h2 className="section-heading built-heading">
+                  Caught <span className="count">{caughtList.length}</span>
+                </h2>
+                <div className="dex-list">
+                  {caughtList.map(p => (
+                    <PokemonRowMemo key={p} name={p} caught={true} regions={pokemonRegions.get(p)} onToggle={onToggle} onSelect={onSelect} />
+                  ))}
+                </div>
+              </section>
+            )}
+          </>
+        ) : (
+          filtered.length > 0 && (
+            <section>
+              <div className="dex-list">
+                {filtered.map(p => (
+                  <PokemonRowMemo key={p} name={p} caught={caught.has(p)} regions={pokemonRegions.get(p)} onToggle={onToggle} onSelect={onSelect} />
+                ))}
+              </div>
+            </section>
+          )
         )}
 
         {filtered.length === 0 && (

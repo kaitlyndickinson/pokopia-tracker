@@ -931,3 +931,50 @@ body {
   white-space: nowrap;
   z-index: 200;
 }
+
+/* ── DEX REGION TAGS ── */
+.dex-region-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  flex-shrink: 0;
+  padding: 0 6px 0 0;
+}
+
+.dex-region-tag {
+  background: rgba(142, 142, 147, 0.1);
+  border-radius: 4px;
+  color: var(--text-muted);
+  font-family: 'Space Mono', monospace;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  padding: 2px 5px;
+}
+
+.dex-row.dex-caught .dex-region-tag {
+  background: rgba(45, 191, 110, 0.1);
+  color: var(--green);
+}
+
+/* ── DEX SORT TOGGLE ── */
+.dex-sort-toggle {
+  align-items: center;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  flex-shrink: 0;
+  font-family: 'Nunito', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  gap: 5px;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.dex-sort-toggle input[type="checkbox"] {
+  accent-color: var(--accent);
+  cursor: pointer;
+  height: 13px;
+  width: 13px;
+}
