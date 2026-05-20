@@ -57,7 +57,9 @@ const habitatPokemonSet = Object.fromEntries(
 );
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState("habitats");
+  const [activeTab, setActiveTab] = useState(
+    () => sessionStorage.getItem("pokopia-tab") || "habitats"
+  );
 
   const [checked, setChecked] = useState(() => {
     try {
@@ -94,6 +96,10 @@ export default function App() {
   });
 
   const toastTimerRef = useRef(null);
+
+  useEffect(() => {
+    sessionStorage.setItem("pokopia-tab", activeTab);
+  }, [activeTab]);
 
   useEffect(() => {
     localStorage.setItem(POKEMON_KEY, JSON.stringify(checked));

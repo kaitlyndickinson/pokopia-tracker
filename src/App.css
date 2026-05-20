@@ -532,7 +532,7 @@ body {
 
 .region-select.inline {
   width: auto;
-  font-size: 16px;
+  font-size: 11px;
   padding: 5px 28px 5px 12px;
   border-radius: 99px;
   background-position: right 10px center;
@@ -768,6 +768,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
