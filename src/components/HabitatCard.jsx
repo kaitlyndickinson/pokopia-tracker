@@ -15,7 +15,13 @@ function HabitatCard({ habitat, status, checkedCount, onClick }) {
       </div>
       <div className="card-body">
         <h3 className="habitat-name">{habitat.name}</h3>
-        {habitat.region && <p className="habitat-region">{habitat.region}</p>}
+        {habitat.regions ? (
+          <div className="habitat-region-tags">
+            {habitat.regions.map(r => <span key={r} className="habitat-region-tag">{r}</span>)}
+          </div>
+        ) : habitat.region ? (
+          <p className="habitat-region">{habitat.region}</p>
+        ) : null}
         <p className="pokemon-preview">
           {habitat.pokemon.slice(0, 3).join(", ")}
           {habitat.pokemon.length > 3 && ` +${habitat.pokemon.length - 3} more`}

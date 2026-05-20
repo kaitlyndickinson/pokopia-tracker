@@ -309,6 +309,22 @@ body {
   letter-spacing: 0.1px;
 }
 
+.habitat-region-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.habitat-region-tag {
+  background: var(--pink-bg);
+  border-radius: 4px;
+  color: var(--accent);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1px;
+  padding: 2px 6px;
+}
+
 .pokemon-preview {
   color: var(--text-muted);
   font-size: 11px;
