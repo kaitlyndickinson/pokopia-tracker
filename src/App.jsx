@@ -42,10 +42,12 @@ function getStatus(habitat, checked) {
   return "In Progress";
 }
 
+const getRegions = h => h.regions || (h.region ? [h.region] : []);
+
 const pokemonByRegion = new Map(
   REGIONS.map(r => [
     r,
-    new Set(habitats.filter(h => h.region === r).flatMap(h => h.pokemon)),
+    new Set(habitats.filter(h => getRegions(h).includes(r)).flatMap(h => h.pokemon)),
   ])
 );
 
@@ -247,7 +249,7 @@ export default function App() {
     if (filter === "built" && status !== "Completed") return false;
     if (filter === "needed" && status === "Completed") return false;
     if (categoryFilter !== "all" && h.category !== categoryFilter) return false;
-    if (regionFilter !== "all" && h.region !== regionFilter) return false;
+    if (regionFilter !== "all" && !getRegions(h).includes(regionFilter)) return false;
     if (search && !h.name.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
