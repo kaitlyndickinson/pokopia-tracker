@@ -93,7 +93,6 @@ export default function App() {
     return v ? parseInt(v, 10) : null;
   });
 
-  const habitatFileInputRef = useRef(null);
   const toastTimerRef = useRef(null);
 
   useEffect(() => {
@@ -316,17 +315,18 @@ export default function App() {
               />
               <div className="habitat-csv-btns">
                 <button className="csv-btn" onClick={handleExportHabitatCsv}>Export Habitats</button>
-                <button className="csv-btn" onClick={() => habitatFileInputRef.current?.click()}>Import Habitats</button>
-                <input
-                  type="file"
-                  accept=".csv"
-                  style={{ display: "none" }}
-                  ref={habitatFileInputRef}
-                  onChange={e => {
-                    if (e.target.files[0]) handleImportHabitatCsv(e.target.files[0]);
-                    e.target.value = "";
-                  }}
-                />
+                <label className="csv-btn">
+                  Import Habitats
+                  <input
+                    type="file"
+                    accept=".csv,text/csv"
+                    style={{ display: "none" }}
+                    onChange={e => {
+                      if (e.target.files[0]) handleImportHabitatCsv(e.target.files[0]);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
               </div>
             </div>
             <div className="filter-row">
