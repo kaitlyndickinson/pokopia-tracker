@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { habitats, categories } from "./data/habitats";
 import { allPokemon } from "./data/pokemon";
 import HabitatCard from "./components/HabitatCard";
@@ -9,6 +9,8 @@ import "./App.css";
 
 const POKEMON_KEY = "pokopia-pokemon";
 const CAUGHT_KEY = "pokopia-caught";
+const EXPORT_KEY = "pokopia-last-export";
+const STALE_MS = 7 * 24 * 60 * 60 * 1000;
 
 const REGIONS = [
   "Withered Wastelands",
@@ -34,12 +36,25 @@ const pokemonByRegion = new Map(
   ])
 );
 
+// Pre-built lookup for sanitizing checked state on load
+const habitatPokemonSet = Object.fromEntries(
+  habitats.map(h => [h.id, new Set(h.pokemon)])
+);
+
 export default function App() {
   const [activeTab, setActiveTab] = useState("habitats");
 
   const [checked, setChecked] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(POKEMON_KEY)) || {}; }
-    catch { return {}; }
+    try {
+      const raw = JSON.parse(localStorage.getItem(POKEMON_KEY)) || {};
+      const sanitized = {};
+      for (const [id, list] of Object.entries(raw)) {
+        if (habitatPokemonSet[id] && Array.isArray(list)) {
+          sanitized[id] = list.filter(p => habitatPokemonSet[id].has(p));
+        }
+      }
+      return sanitized;
+    } catch { return {}; }
   });
 
   const [caught, setCaught] = useState(() => {
@@ -56,6 +71,15 @@ export default function App() {
   const [regionFilter, setRegionFilter] = useState("all");
   const [dexRegionFilter, setDexRegionFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const [toast, setToast] = useState(null);
+  const [warningDismissed, setWarningDismissed] = useState(false);
+  const [lastExported, setLastExported] = useState(() => {
+    const v = localStorage.getItem(EXPORT_KEY);
+    return v ? parseInt(v, 10) : null;
+  });
+
+  const habitatFileInputRef = useRef(null);
+  const toastTimerRef = useRef(null);
 
   useEffect(() => {
     localStorage.setItem(POKEMON_KEY, JSON.stringify(checked));
@@ -65,7 +89,14 @@ export default function App() {
     localStorage.setItem(CAUGHT_KEY, JSON.stringify([...caught]));
   }, [caught]);
 
+  const showToast = useCallback((msg) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToast(msg);
+    toastTimerRef.current = setTimeout(() => setToast(null), 3000);
+  }, []);
+
   const togglePokemon = useCallback((habitatId, pokemonName) => {
+    const isChecking = !(checked[habitatId] || []).includes(pokemonName);
     setChecked(prev => {
       const current = prev[habitatId] || [];
       const next = current.includes(pokemonName)
@@ -73,10 +104,20 @@ export default function App() {
         : [...current, pokemonName];
       return { ...prev, [habitatId]: next };
     });
-  }, []);
+    if (isChecking) {
+      setCaught(prev => { const n = new Set(prev); n.add(pokemonName); return n; });
+    }
+  }, [checked]);
 
   const bulkSetPokemon = useCallback((habitatId, list) => {
     setChecked(prev => ({ ...prev, [habitatId]: list }));
+    if (list.length > 0) {
+      setCaught(prev => {
+        const next = new Set(prev);
+        for (const p of list) next.add(p);
+        return next;
+      });
+    }
   }, []);
 
   const toggleCaught = useCallback((name) => {
@@ -97,6 +138,9 @@ export default function App() {
     a.download = "pokopia-caught.csv";
     a.click();
     URL.revokeObjectURL(url);
+    const now = Date.now();
+    localStorage.setItem(EXPORT_KEY, now.toString());
+    setLastExported(now);
   }, [caught]);
 
   const handleImportCsv = useCallback((file) => {
@@ -111,16 +155,71 @@ export default function App() {
         const val = line.slice(comma + 1).trim().toLowerCase();
         if (name && val === "true") imported.add(name);
       }
+      const newChecked = {};
+      for (const h of habitats) {
+        const checkedInHabitat = h.pokemon.filter(p => imported.has(p));
+        if (checkedInHabitat.length > 0) newChecked[h.id] = checkedInHabitat;
+      }
       setCaught(imported);
+      setChecked(newChecked);
+      showToast(`Imported ${imported.size} Pokémon caught`);
     };
     reader.readAsText(file);
-  }, []);
+  }, [showToast]);
+
+  const handleExportHabitatCsv = useCallback(() => {
+    const lines = ["habitatId,pokemon"];
+    for (const [id, list] of Object.entries(checked)) {
+      if (list && list.length > 0) lines.push(`${id},${list.join("|")}`);
+    }
+    const blob = new Blob([lines.join("\n")], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "pokopia-habitats.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+    const now = Date.now();
+    localStorage.setItem(EXPORT_KEY, now.toString());
+    setLastExported(now);
+  }, [checked]);
+
+  const handleImportHabitatCsv = useCallback((file) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const lines = e.target.result.trim().split("\n").slice(1);
+      const newChecked = {};
+      for (const line of lines) {
+        const comma = line.indexOf(",");
+        if (comma === -1) continue;
+        const id = line.slice(0, comma).trim();
+        const pokemonList = line.slice(comma + 1).trim().split("|").filter(Boolean);
+        if (id && pokemonList.length > 0) newChecked[id] = pokemonList;
+      }
+      setChecked(newChecked);
+      setCaught(prev => {
+        const next = new Set(prev);
+        for (const list of Object.values(newChecked)) {
+          for (const p of list) next.add(p);
+        }
+        return next;
+      });
+      const habitatCount = Object.keys(newChecked).length;
+      const allCaughtFromImport = new Set(Object.values(newChecked).flat());
+      showToast(`Imported ${habitatCount} habitats, ${allCaughtFromImport.size} Pokémon marked caught`);
+    };
+    reader.readAsText(file);
+  }, [showToast]);
 
   const handleSelect = useCallback((h) => setSelected(h), []);
   const handleClose = useCallback(() => setSelected(null), []);
   const handleClosePokemon = useCallback(() => setSelectedPokemon(null), []);
 
   const isHabitats = activeTab === "habitats";
+
+  const hasData = caught.size > 0 || Object.values(checked).some(list => list && list.length > 0);
+  const isStale = !lastExported || (Date.now() - lastExported) > STALE_MS;
+  const showWarning = hasData && isStale && !warningDismissed;
 
   const completedCount = habitats.filter(h => getStatus(h, checked) === "Completed").length;
   const caughtCount = caught.size;
@@ -182,15 +281,39 @@ export default function App() {
         </div>
       </header>
 
+      {showWarning && (
+        <div className="stale-warning">
+          <span>💾 Haven't exported your data in a while — export CSV to back it up.</span>
+          <button className="stale-export-btn" onClick={handleExportCsv}>Export</button>
+          <button className="stale-dismiss-btn" onClick={() => setWarningDismissed(true)}>✕</button>
+        </div>
+      )}
+
       {isHabitats ? (
         <>
           <div className="controls">
-            <input
-              className="search-input"
-              placeholder="Search habitats..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-            />
+            <div className="search-row">
+              <input
+                className="search-input"
+                placeholder="Search habitats..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+              />
+              <div className="habitat-csv-btns">
+                <button className="csv-btn" onClick={handleExportHabitatCsv}>Export Habitats</button>
+                <button className="csv-btn" onClick={() => habitatFileInputRef.current?.click()}>Import Habitats</button>
+                <input
+                  type="file"
+                  accept=".csv"
+                  style={{ display: "none" }}
+                  ref={habitatFileInputRef}
+                  onChange={e => {
+                    if (e.target.files[0]) handleImportHabitatCsv(e.target.files[0]);
+                    e.target.value = "";
+                  }}
+                />
+              </div>
+            </div>
             <div className="filter-row">
               {["all", "needed", "built"].map(f => (
                 <button
@@ -309,14 +432,17 @@ export default function App() {
           className="reset-btn"
           onClick={() => {
             if (window.confirm("Are you sure? This will clear all your progress.")) {
+              setChecked({});
+              setCaught(new Set());
               localStorage.clear();
-              window.location.reload();
             }
           }}
         >
           Reset Data
         </button>
       </footer>
+
+      {toast && <div className="toast">{toast}</div>}
     </div>
   );
 }
